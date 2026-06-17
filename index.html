@@ -1,512 +1,520 @@
 <!DOCTYPE html>
-<html lang="ro">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Electrotehnică - Dark Mode</title>
+    <title>Electrotechnics Exam Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #0b1121;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --correct: #10b981;
+            --wrong: #ef4444;
+            --skipped: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            
+            /* Source Badge Colors */
+            --src-orig-bg: rgba(168, 85, 247, 0.15);
+            --src-orig-text: #c084fc;
+            --src-orig-border: #a855f7;
+            
+            --src-gen-bg: rgba(56, 189, 248, 0.15);
+            --src-gen-text: #7dd3fc;
+            --src-gen-border: #38bdf8;
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0b0f19; /* Fundal ultra-dark cu tentă albastră */
-            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
+            min-height: 100vh;
         }
-        #app {
-            background: #161f30; /* Albastru închis premium */
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+
+        .app-container {
             width: 100%;
-            max-width: 700px;
-            box-sizing: border-box;
-            max-height: 90vh;
-            overflow-y: auto;
-            border: 1px solid #233554; /* Border subtil */
+            max-width: 800px;
+            padding: 20px;
         }
-        h1 {
-            text-align: center;
-            color: #38bdf8; /* Albastru cyan electric */
-            margin-top: 0;
-            font-size: 1.8em;
-            letter-spacing: 0.5px;
+
+        /* --- SCREENS --- */
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .question {
-            font-size: 1.2em;
-            margin-bottom: 25px;
-            font-weight: bold;
-            color: #f1f5f9;
-            line-height: 1.5;
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
-        .options {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        button.option-btn {
-            background-color: #1e293b; /* Butoane gri-albăstrui închise */
-            border: 2px solid #334155;
-            padding: 14px;
-            border-radius: 8px;
-            font-size: 1em;
+
+        h1 { margin-top: 0; color: #ffffff; font-weight: 600; font-size: 2rem; }
+        p.subtitle { color: var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; }
+
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: left;
-            color: #cbd5e1;
-        }
-        button.option-btn:hover:not(:disabled) {
-            background-color: #233554;
-            border-color: #38bdf8;
-            color: #ffffff;
-        }
-        button.option-btn:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .correct {
-            background-color: #064e3b !important; /* Verde închis neon */
-            border-color: #10b981 !important;
-            color: #ecfdf5 !important;
-            font-weight: bold;
-        }
-        .wrong {
-            background-color: #7f1d1d !important; /* Roșu închis burgund */
-            border-color: #ef4444 !important;
-            color: #fef2f2 !important;
-        }
-        .explanation {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #0f172a;
-            border-left: 5px solid #38bdf8;
-            border-radius: 4px;
-            display: none;
-            font-size: 0.95em;
-            color: #94a3b8;
-            line-height: 1.5;
-        }
-        #next-btn, #restart-btn {
-            margin-top: 25px;
-            padding: 14px 20px;
-            background-color: #0284c7;
-            color: white;
             border: none;
-            border-radius: 8px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            display: none;
-            transition: background 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.2s;
+            font-family: inherit;
         }
-        #next-btn:hover, #restart-btn:hover {
-            background-color: #0369a1;
+        .btn-primary {
+            background: var(--primary);
+            color: #0f172a;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
         }
-        .stats {
+        .btn-primary:hover { background: #7dd3fc; transform: translateY(-2px); }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-outline:hover { border-color: var(--text-main); color: var(--text-main); }
+
+        /* --- HEADER & BADGES --- */
+        .quiz-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #64748b;
-            font-size: 0.95em;
-            border-bottom: 1px solid #233554;
-            padding-bottom: 10px;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
         }
+        .stats { font-weight: 500; color: var(--text-muted); font-size: 0.95rem; }
+        
+        .source-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid;
+        }
+        .source-badge.original {
+            background: var(--src-orig-bg);
+            color: var(--src-orig-text);
+            border-color: var(--src-orig-border);
+        }
+        .source-badge.generated {
+            background: var(--src-gen-bg);
+            color: var(--src-gen-text);
+            border-color: var(--src-gen-border);
+        }
+
+        /* --- QUESTION & OPTIONS --- */
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            color: #ffffff;
+        }
+        
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        
+        .option-item {
+            padding: 18px 20px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 1.05rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--text-main);
+        }
+        .option-item:hover:not(.disabled) {
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.05);
+        }
+        .option-item.disabled { cursor: default; }
+
+        .opt-letter {
+            background: var(--border);
+            color: var(--text-main);
+            border-radius: 8px;
+            width: 30px; height: 30px;
+            display: flex; justify-content: center; align-items: center;
+            font-weight: 700; font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* Answer States */
+        .option-item.correct { border-color: var(--correct); background: rgba(16, 185, 129, 0.1); }
+        .option-item.correct .opt-letter { background: var(--correct); color: white; }
+        
+        .option-item.wrong { border-color: var(--wrong); background: rgba(239, 68, 68, 0.1); }
+        .option-item.wrong .opt-letter { background: var(--wrong); color: white; }
+        
+        .option-item.faded { opacity: 0.3; }
+
+        /* --- EXPLANATION --- */
+        .explanation-box {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.2);
+            border-left: 4px solid var(--border);
+            display: none;
+            line-height: 1.6;
+        }
+        .explanation-box p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+        .status-title { font-weight: 700; margin-bottom: 8px; display: block; font-size: 1.1rem; }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        /* --- SUMMARY --- */
+        .summary-list {
+            max-height: 50vh;
+            overflow-y: auto;
+            margin: 30px 0;
+            text-align: left;
+            padding-right: 10px;
+        }
+        .summary-list::-webkit-scrollbar { width: 6px; }
+        .summary-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+        .sum-item {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            background: rgba(0,0,0,0.1);
+            border-left-width: 4px;
+        }
+        .sum-item.correct { border-left-color: var(--correct); }
+        .sum-item.wrong { border-left-color: var(--wrong); }
+        .sum-item.skipped { border-left-color: var(--skipped); }
+
+        .sum-q { font-weight: 600; margin-bottom: 8px; font-size: 1rem; }
+        .sum-a { font-size: 0.9rem; margin-bottom: 4px; }
     </style>
 </head>
 <body>
 
-<div id="app">
-    <h1>Quiz Electrotehnică</h1>
-    <div class="stats">
-        <span id="progress">Întrebarea: 1/50</span>
-        <span id="score-display">Scor: 0</span>
+    <div class="app-container">
+        
+        <div id="screen-start" class="screen active card" style="text-align: center;">
+            <h1>Electrotechnics Exam</h1>
+            <p class="subtitle">50 Randomized Questions.<br>Includes original test questions and newly generated ones from course notes.</p>
+            <button class="btn btn-primary" onclick="startExam()">Start Learning</button>
+        </div>
+
+        <div id="screen-exam" class="screen card">
+            <div class="quiz-header">
+                <div class="stats">
+                    <span id="progress-text">Question 1 of 50</span> • 
+                    <span id="score-text">Score: 0</span>
+                </div>
+                <div id="source-indicator"></div>
+            </div>
+
+            <div class="question-text" id="question-text">Loading...</div>
+            <div class="options-list" id="options-list"></div>
+            <div class="explanation-box" id="explanation-box"></div>
+
+            <div class="controls">
+                <button class="btn btn-outline" id="btn-skip" onclick="skipQuestion()">I don't know (Skip)</button>
+                <button class="btn btn-primary" id="btn-next" style="display: none;" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+
+        <div id="screen-results" class="screen card" style="text-align: center;">
+            <h1>Exam Completed!</h1>
+            <div id="final-score" style="font-size: 3rem; font-weight: 700; color: var(--primary); margin: 20px 0;">0 / 50</div>
+            
+            <div class="summary-list" id="summary-list">
+                </div>
+
+            <button class="btn btn-primary" onclick="location.reload()">Restart Exam</button>
+        </div>
+
     </div>
-    <div id="quiz-container">
-        <div id="question" class="question">Se încarcă întrebarea...</div>
-        <div id="options" class="options"></div>
-        <div id="explanation" class="explanation"></div>
-        <button id="next-btn" onclick="nextQuestion()">Următoarea Întrebare</button>
-    </div>
-    <div id="result-container" style="display: none; text-align: center;">
-        <h2>Quiz Finalizat!</h2>
-        <p id="final-score" style="font-size: 1.5em; font-weight: bold; color: #38bdf8;"></p>
-        <button id="restart-btn" style="display: inline-block;" onclick="startQuiz()">Repornește Quiz-ul</button>
-    </div>
-</div>
 
 <script>
+    // Database of 50 Questions with SOURCE tags
     const rawQuestions = [
-        // --- CELE 20 DE ÎNTREBĂRI ORIGINALE ---
-        {
-            q: "Ohm's Law is expressed as:",
-            opts: [{t: "R = u * i + e", c: false}, {t: "R * i = u * G + e", c: false}, {t: "R * i = u + e", c: true}, {t: "R * l = u + e", c: false}],
-            exp: "Ohm's law for a circuit branch with an electromotive force (e) is given by R * i = u + e."
-        },
-        {
-            q: "The general form of the Electromagnetic Induction Law (Faraday's Law) is:",
-            opts: [
-                {t: "the magnetomotive voltage produced is equal to the decrease speed of magnetic flux through any surface supported on the curve", c: false}, 
-                {t: "electromotive voltage is decrease of the magnetic flux through a surface", c: false}, 
-                {t: "the electromotive voltage, e, produced through electromagnetic induction along the closed curve is equal with the decrease speed of the magnetic flux through any surface supported on the curve", c: true}, 
-                {t: "the voltage is produced through induction along a permanent magnet closed in a curve", c: false}
-            ],
-            exp: "Faraday's law states that the induced electromotive voltage equals the rate of decrease of the magnetic flux through the surface supported by the closed loop."
-        },
-        {
-            q: "The parameter Z is:",
-            opts: [{t: "the complex conductance", c: false}, {t: "the complex susceptance", c: false}, {t: "the complex impedance", c: true}, {t: "the complex admittance", c: false}],
-            exp: "Z represents complex impedance, which is the total opposition a circuit presents to alternating current."
-        },
-        {
-            q: "The equivalent capacitance of two capacitors connected in series having the capacitances C1 and C2 is:",
-            opts: [{t: "C_e = C_1 + C_2", c: false}, {t: "C_e = (C_1 + C_2) / (C_1 * C_2)", c: false}, {t: "C_e = C_1 * C_2", c: false}, {t: "C_e = (C_1 * C_2) / (C_1 + C_2)", c: true}],
-            exp: "For capacitors in series, the equivalent capacitance is the product over the sum: (C_1 * C_2) / (C_1 + C_2)."
-        },
-        {
-            q: "U_AB0 in Thevenin's Theorem is:",
-            opts: [{t: "the voltage between A and B in open circuit between A and B", c: true}, {t: "the direct current voltage between A and B", c: false}, {t: "the voltage between A and B at short-circuit between A and B", c: false}, {t: "the alternating current voltage between A and B", c: false}],
-            exp: "U_AB0 refers to the open-circuit voltage at the terminals A and B before a load is connected."
-        },
-        {
-            q: "How can the phenomena encountered in the Theory of the Electromagnetic Field be classified:",
-            opts: [{t: "charge, electric currents, and permanent magnets", c: false}, {t: "electric, magnetic, and electromagnetic", c: true}, {t: "electrification, magnetization or electro-kinetic", c: false}, {t: "friction; heating, and chemical", c: false}],
-            exp: "The phenomena are classified into three distinct categories: electric (stationary charges), magnetic (stationary currents), and electromagnetic (time-variable currents)."
-        },
-        {
-            q: "The resistors, inductors (coils) and capacitors are:",
-            opts: [{t: "active elements of the circuit", c: false}, {t: "passive elements of the circuit", c: true}, {t: "sources of the circuit", c: false}, {t: "parameters of the circuit", c: false}],
-            exp: "Resistors, inductors, and capacitors cannot generate energy continuously, making them passive elements."
-        },
-        {
-            q: "The generalized impedance of a capacitor in the transient regime is:",
-            opts: [{t: "Z = sC", c: false}, {t: "Z = 1 / sC", c: true}, {t: "Z = C / s", c: false}, {t: "Z = s^2*C", c: false}],
-            exp: "In the Laplace domain (transient regime), the impedance of a capacitor is given by 1 / (s * C)."
-        },
-        {
-            q: "The internal resistance of an ideal current source has the value equal with:",
-            opts: [{t: "the source value", c: false}, {t: "infinite", c: true}, {t: "any value", c: false}, {t: "zero", c: false}],
-            exp: "An ideal current source provides a constant current regardless of the load, which implies it has an infinite internal resistance."
-        },
-        {
-            q: "In the R, L, C parallel electric circuit, at resonance:",
-            opts: [{t: "the total current is minimal", c: true}, {t: "U_L = 0", c: false}, {t: "U_L = - U_C", c: false}, {t: "the active power is zero", c: false}],
-            exp: "In a parallel RLC circuit at resonance, the total impedance is at its maximum (purely resistive), making the total current drawn from the source minimal."
-        },
-        {
-            q: "The symbol E (vector) is:",
-            opts: [{t: "electric field density", c: false}, {t: "electric field intensity", c: true}, {t: "electric charge intensity", c: false}, {t: "electric current intensity", c: false}],
-            exp: "Vector E denotes the Electric Field Intensity, measured in Volts per meter (V/m)."
-        },
-        {
-            q: "Which is the correct affirmation about the parallel equivalent resistance of 2 resistors:",
-            opts: [{t: "1 / R_p = 1 / R_1 + 1 / R_2", c: true}, {t: "R_p = R_1 * R_2", c: false}, {t: "R_p = R_1 + R_2", c: false}, {t: "R_p = R_1 - R_2", c: false}],
-            exp: "For parallel resistors, the reciprocal of the equivalent resistance is the sum of the reciprocals of the individual resistances."
-        },
-        {
-            q: "The impedance parameters of a passive linear two ports network establishes:",
-            opts: [{t: "the relations between the input and output quantities", c: false}, {t: "the relations between the voltages and the currents", c: true}, {t: "the symmetry conditions", c: false}, {t: "the relations between the currents and the voltages", c: false}],
-            exp: "Impedance parameters specifically define the linear relationships connecting the voltages to the currents at the network's ports."
-        },
-        {
-            q: "Which is the second commutation theorem (transient regime):",
-            opts: [{t: "the integration constants are determined from the circuit's initial condition", c: false}, {t: "the voltage at the capacitor terminals can't vary through jump in the moment of commutation", c: false}, {t: "in the moment of commutation, the current through the inductors can't vary through a jump", c: true}, {t: "the transitory regime is passing from a permanent regime to another permanent regime", c: false}],
-            exp: "The commutation theorems state that capacitor voltage and inductor current cannot change instantaneously. The second theorem refers to the inductor's current (or magnetic flux)."
-        },
-        {
-            q: "The volume charge density is defined as:",
-            opts: [{t: "p_s = q/A", c: false}, {t: "p_v = q/V", c: false}, {t: "p_v = dq/dS", c: false}, {t: "p_v = dq/dV", c: true}],
-            exp: "Volume charge density (rho_v) is the limit of charge per unit volume as the volume approaches zero, represented as the derivative dq/dV."
-        },
-        {
-            q: "The electrical conductance:",
-            opts: [{t: "is the image of conductivity", c: false}, {t: "is the real part of the electric resistance", c: false}, {t: "is the inverse of the electric resistance", c: true}, {t: "is the conduction current", c: false}],
-            exp: "Conductance (G) is the ease with which current flows, mathematically defined as the reciprocal of resistance (G = 1/R)."
-        },
-        {
-            q: "The symbol H (vector) is:",
-            opts: [{t: "magnetic field density", c: false}, {t: "magnetic field intensity", c: true}, {t: "magnet charge intensity", c: false}, {t: "magnetic current intensity", c: false}],
-            exp: "Vector H represents the Magnetic Field Intensity, distinct from B which is the Magnetic Flux Density."
-        },
-        {
-            q: "When we passivate an ideal voltage source, we replace it with:",
-            opts: [{t: "short-circuit", c: true}, {t: "operational circuit", c: false}, {t: "open circuit", c: false}, {t: "its internal resistance", c: false}],
-            exp: "To passivate an ideal voltage source in circuit analysis, it is replaced with a short circuit (0 Volts)."
-        },
-        {
-            q: "For a quadripole what do A, B, C, D represent:",
-            opts: [{t: "impedance parameters", c: false}, {t: "fundamental parameters", c: true}, {t: "admittance parameters", c: false}, {t: "internal parameters", c: false}],
-            exp: "A, B, C, and D are known as the fundamental (or transmission) parameters of a two-port network."
-        },
-        {
-            q: "The capacitive reactance, X_C, has the expression:",
-            opts: [{t: "X_C = w * C", c: false}, {t: "X_C = 1 / (w * C)", c: true}, {t: "X_C = j * w * C", c: false}, {t: "none of the ones presented", c: false}],
-            exp: "Capacitive reactance is calculated as 1 divided by the angular frequency (w) times the capacitance (C)."
-        },
+        // --- 20 ORIGINAL QUESTIONS ---
+        { source: 'original', q: "Ohm's Law is expressed as:", opts: [{t: "R = u * i + e", c: false}, {t: "R * i = u * G + e", c: false}, {t: "R * i = u + e", c: true}, {t: "R * l = u + e", c: false}], exp: "Ohm's law for a circuit branch with an electromotive force (e) is given by R * i = u + e." },
+        { source: 'original', q: "The general form of the Electromagnetic Induction Law (Faraday's Law) is:", opts: [{t: "the magnetomotive voltage produced is equal to the decrease speed of magnetic flux through any surface supported on the curve", c: false}, {t: "electromotive voltage is decrease of the magnetic flux through a surface", c: false}, {t: "the electromotive voltage, e, produced through electromagnetic induction along the closed curve is equal with the decrease speed of the magnetic flux through any surface supported on the curve", c: true}, {t: "the voltage is produced through induction along a permanent magnet closed in a curve", c: false}], exp: "Faraday's law states that the induced electromotive voltage equals the rate of decrease of the magnetic flux through the surface supported by the closed loop." },
+        { source: 'original', q: "The parameter Z is:", opts: [{t: "the complex conductance", c: false}, {t: "the complex susceptance", c: false}, {t: "the complex impedance", c: true}, {t: "the complex admittance", c: false}], exp: "Z represents complex impedance, which is the total opposition a circuit presents to alternating current." },
+        { source: 'original', q: "The equivalent capacitance of two capacitors connected in series having the capacitances C1 and C2 is:", opts: [{t: "C_e = C_1 + C_2", c: false}, {t: "C_e = (C_1 + C_2) / (C_1 * C_2)", c: false}, {t: "C_e = C_1 * C_2", c: false}, {t: "C_e = (C_1 * C_2) / (C_1 + C_2)", c: true}], exp: "For capacitors in series, the equivalent capacitance is the product over the sum: (C_1 * C_2) / (C_1 + C_2)." },
+        { source: 'original', q: "U_AB0 in Thevenin's Theorem is:", opts: [{t: "the voltage between A and B in open circuit between A and B", c: true}, {t: "the direct current voltage between A and B", c: false}, {t: "the voltage between A and B at short-circuit between A and B", c: false}, {t: "the alternating current voltage between A and B", c: false}], exp: "U_AB0 refers to the open-circuit voltage at the terminals A and B before a load is connected." },
+        { source: 'original', q: "How can the phenomena encountered in the Theory of the Electromagnetic Field be classified:", opts: [{t: "charge, electric currents, and permanent magnets", c: false}, {t: "electric, magnetic, and electromagnetic", c: true}, {t: "electrification, magnetization or electro-kinetic", c: false}, {t: "friction; heating, and chemical", c: false}], exp: "The phenomena are classified into three distinct categories: electric (stationary charges), magnetic (stationary currents), and electromagnetic (time-variable currents)." },
+        { source: 'original', q: "The resistors, inductors (coils) and capacitors are:", opts: [{t: "active elements of the circuit", c: false}, {t: "passive elements of the circuit", c: true}, {t: "sources of the circuit", c: false}, {t: "parameters of the circuit", c: false}], exp: "Resistors, inductors, and capacitors cannot generate energy continuously, making them passive elements." },
+        { source: 'original', q: "The generalized impedance of a capacitor in the transient regime is:", opts: [{t: "Z = sC", c: false}, {t: "Z = 1 / sC", c: true}, {t: "Z = C / s", c: false}, {t: "Z = s^2*C", c: false}], exp: "In the Laplace domain (transient regime), the impedance of a capacitor is given by 1 / (s * C)." },
+        { source: 'original', q: "The internal resistance of an ideal current source has the value equal with:", opts: [{t: "the source value", c: false}, {t: "infinite", c: true}, {t: "any value", c: false}, {t: "zero", c: false}], exp: "An ideal current source provides a constant current regardless of the load, which implies it has an infinite internal resistance." },
+        { source: 'original', q: "In the R, L, C parallel electric circuit, at resonance:", opts: [{t: "the total current is minimal", c: true}, {t: "U_L = 0", c: false}, {t: "U_L = - U_C", c: false}, {t: "the active power is zero", c: false}], exp: "In a parallel RLC circuit at resonance, the total impedance is at its maximum (purely resistive), making the total current drawn from the source minimal." },
+        { source: 'original', q: "The symbol E (vector) is:", opts: [{t: "electric field density", c: false}, {t: "electric field intensity", c: true}, {t: "electric charge intensity", c: false}, {t: "electric current intensity", c: false}], exp: "Vector E denotes the Electric Field Intensity, measured in Volts per meter (V/m)." },
+        { source: 'original', q: "Which is the correct affirmation about the parallel equivalent resistance of 2 resistors:", opts: [{t: "1 / R_p = 1 / R_1 + 1 / R_2", c: true}, {t: "R_p = R_1 * R_2", c: false}, {t: "R_p = R_1 + R_2", c: false}, {t: "R_p = R_1 - R_2", c: false}], exp: "For parallel resistors, the reciprocal of the equivalent resistance is the sum of the reciprocals of the individual resistances." },
+        { source: 'original', q: "The impedance parameters of a passive linear two ports network establishes:", opts: [{t: "the relations between the input and output quantities", c: false}, {t: "the relations between the voltages and the currents", c: true}, {t: "the symmetry conditions", c: false}, {t: "the relations between the currents and the voltages", c: false}], exp: "Impedance parameters specifically define the linear relationships connecting the voltages to the currents at the network's ports." },
+        { source: 'original', q: "Which is the second commutation theorem (transient regime):", opts: [{t: "the integration constants are determined from the circuit's initial condition", c: false}, {t: "the voltage at the capacitor terminals can't vary through jump in the moment of commutation", c: false}, {t: "in the moment of commutation, the current through the inductors can't vary through a jump", c: true}, {t: "the transitory regime is passing from a permanent regime to another permanent regime", c: false}], exp: "The commutation theorems state that capacitor voltage and inductor current cannot change instantaneously. The second theorem refers to the inductor's current (or magnetic flux)." },
+        { source: 'original', q: "The volume charge density is defined as:", opts: [{t: "p_s = q/A", c: false}, {t: "p_v = q/V", c: false}, {t: "p_v = dq/dS", c: false}, {t: "p_v = dq/dV", c: true}], exp: "Volume charge density (rho_v) is the limit of charge per unit volume as the volume approaches zero, represented as the derivative dq/dV." },
+        { source: 'original', q: "The electrical conductance:", opts: [{t: "is the image of conductivity", c: false}, {t: "is the real part of the electric resistance", c: false}, {t: "is the inverse of the electric resistance", c: true}, {t: "is the conduction current", c: false}], exp: "Conductance (G) is the ease with which current flows, mathematically defined as the reciprocal of resistance (G = 1/R)." },
+        { source: 'original', q: "The symbol H (vector) is:", opts: [{t: "magnetic field density", c: false}, {t: "magnetic field intensity", c: true}, {t: "magnet charge intensity", c: false}, {t: "magnetic current intensity", c: false}], exp: "Vector H represents the Magnetic Field Intensity, distinct from B which is the Magnetic Flux Density." },
+        { source: 'original', q: "When we passivate an ideal voltage source, we replace it with:", opts: [{t: "short-circuit", c: true}, {t: "operational circuit", c: false}, {t: "open circuit", c: false}, {t: "its internal resistance", c: false}], exp: "To passivate an ideal voltage source in circuit analysis, it is replaced with a short circuit (0 Volts)." },
+        { source: 'original', q: "For a quadripole what do A, B, C, D represent:", opts: [{t: "impedance parameters", c: false}, {t: "fundamental parameters", c: true}, {t: "admittance parameters", c: false}, {t: "internal parameters", c: false}], exp: "A, B, C, and D are known as the fundamental (or transmission) parameters of a two-port network." },
+        { source: 'original', q: "The capacitive reactance, X_C, has the expression:", opts: [{t: "X_C = w * C", c: false}, {t: "X_C = 1 / (w * C)", c: true}, {t: "X_C = j * w * C", c: false}, {t: "none of the ones presented", c: false}], exp: "Capacitive reactance is calculated as 1 divided by the angular frequency (w) times the capacitance (C)." },
 
-        // --- CELE 30 DE ÎNTREBĂRI NOI DIN CURSURI ---
-        {
-            q: "According to Course 1, Electrotechnics covers two main parts. One is the Theory of Electric Circuits. What is the other?",
-            opts: [{t: "The Theory of Thermodynamics", c: false}, {t: "The Theory of Electromagnetic Field", c: true}, {t: "The Theory of Solid State Physics", c: false}, {t: "The Theory of Digital Electronics", c: false}],
-            exp: "Electrotechnics analyzes electric, magnetic and electromagnetic phenomena and covers two main parts: The Theory of Electromagnetic Field and The Theory of Electric Circuits."
-        },
-        {
-            q: "How can the state of electrification (charging a body) be achieved?",
-            opts: [{t: "Only by friction", c: false}, {t: "Only by heating", c: false}, {t: "By friction, heating, chemical effects, crystal deformation, or irradiation", c: true}, {t: "By changing the atmospheric pressure", c: false}],
-            exp: "Electrification can be achieved by friction, heating, chemical effects, crystal deformation, or irradiation (e.g., x-rays or ultraviolet)."
-        },
-        {
-            q: "What defines an insulator (dielectric) material?",
-            opts: [{t: "It amplifies the flow of electric charges", c: false}, {t: "It allows the free flow of electric charges", c: false}, {t: "It reverses the direction of electric charges", c: false}, {t: "It doesn't allow the flow of electric charges", c: true}],
-            exp: "An insulator doesn't allow the flow of electric charges. They are also called dielectrics."
-        },
-        {
-            q: "The electric field intensity (E) is measured in which units?",
-            opts: [{t: "Farads (F)", c: false}, {t: "Newtons per Coulomb (N/C) or Volts per meter (V/m)", c: true}, {t: "Coulombs (C)", c: false}, {t: "Joules (J)", c: false}],
-            exp: "Electric field intensity is measured in Volts per meter (V/m) or Newtons per Coulomb (N/C)."
-        },
-        {
-            q: "For a parallel plane capacitor, if 'A' is the area and 'd' is the distance between plates, the capacitance is:",
-            opts: [{t: "C = (epsilon * d) / A", c: false}, {t: "C = (epsilon * A) / d", c: true}, {t: "C = epsilon * A * d", c: false}, {t: "C = A / (epsilon * d)", c: false}],
-            exp: "The direct method calculation shows the capacitance of a plane capacitor is C = (epsilon * A) / d."
-        },
-        {
-            q: "When capacitors are connected in parallel, the total equivalent capacitance is:",
-            opts: [{t: "The sum of their reciprocals", c: false}, {t: "The product of their capacitances", c: false}, {t: "The sum of their individual capacitances", c: true}, {t: "Calculated exactly like resistors in parallel", c: false}],
-            exp: "For capacitors in parallel, the equivalent capacitance is C_e = C_1 + C_2 + ... + C_n."
-        },
-        {
-            q: "What is the relation between Electric Resistance (R) and Electric Conductance (G)?",
-            opts: [{t: "G is the real part of R", c: false}, {t: "G is the reciprocal (inverse) of R", c: true}, {t: "G and R are measured in the same units", c: false}, {t: "G is the derivative of R with respect to time", c: false}],
-            exp: "The reciprocal quantity of electric resistance is electric conductance (G = 1/R)."
-        },
-        {
-            q: "Based on the temporary magnetization law, materials with magnetic susceptibility (X_m) < 0 are called:",
-            opts: [{t: "Paramagnetic materials", c: false}, {t: "Ferromagnetic materials", c: false}, {t: "Diamagnetic materials", c: true}, {t: "Linear materials", c: false}],
-            exp: "Materials for which X_m < 0 are called diamagnetic materials."
-        },
-        {
-            q: "What defines a paramagnetic material?",
-            opts: [{t: "X_m < 0", c: false}, {t: "X_m = 0", c: false}, {t: "X_m > 0", c: true}, {t: "It depends on the electric field", c: false}],
-            exp: "Materials for which magnetic susceptibility X_m > 0 are called paramagnetic materials."
-        },
-        {
-            q: "Which passive electronic circuit component is used specifically to store magnetic energy?",
-            opts: [{t: "Resistor", c: false}, {t: "Capacitor", c: false}, {t: "Inductor (Coil)", c: true}, {t: "Diode", c: false}],
-            exp: "An inductor (coil) is a passive electric element used in circuits to store magnetic energy."
-        },
-        {
-            q: "According to Faraday's experiment, what happens if you move a permanent magnet inside a conductive loop?",
-            opts: [{t: "It acts as a capacitor", c: false}, {t: "An electric current is induced", c: true}, {t: "The loop becomes perfectly resistive", c: false}, {t: "The magnetic field is destroyed", c: false}],
-            exp: "Moving a permanent magnet inside a conductive loop changes the magnetic flux, inducing an electromotive voltage and an electric current."
-        },
-        {
-            q: "Electromotive voltage induced by Faraday's Law can be decomposed into two components:",
-            opts: [{t: "Friction and Heating", c: false}, {t: "Movement and Transformation", c: true}, {t: "Active and Passive", c: false}, {t: "Electric and Magnetic", c: false}],
-            exp: "The total induced electromotive voltage is the sum of the voltage induced through movement and the voltage induced through transformation."
-        },
-        {
-            q: "An active element of a circuit is defined as:",
-            opts: [{t: "An element that dissipates energy as heat", c: false}, {t: "An element capable of generating energy", c: true}, {t: "An element that only stores magnetic energy", c: false}, {t: "An element that only opposes current", c: false}],
-            exp: "An active element (like a voltage or current source) is capable of generating energy, while a passive element is not."
-        },
-        {
-            q: "In circuit topology, what is a 'node'?",
-            opts: [{t: "An unbranched portion of a circuit", c: false}, {t: "Any closed path in a circuit", c: false}, {t: "An element that stores energy", c: false}, {t: "The point of connection between at least three branches", c: true}],
-            exp: "A node is the point of connection between at least three branches."
-        },
-        {
-            q: "In circuit topology, a 'branch' is defined as:",
-            opts: [{t: "A point where three wires meet", c: false}, {t: "Any closed path in a circuit", c: false}, {t: "An unbranched portion of a circuit formed of elements connected in series", c: true}, {t: "A network of parallel resistors", c: false}],
-            exp: "A branch of a circuit is an unbranched portion of a circuit formed of elements connected in series with each other."
-        },
-        {
-            q: "What does Euler's Theorem calculate in circuit topology?",
-            opts: [{t: "The total resistance", c: false}, {t: "The equivalent capacitance", c: false}, {t: "The number of independent loops (b = l - n + s)", c: true}, {t: "The total electromotive force", c: false}],
-            exp: "Euler's Theorem (b = l - n + s) determines the exact number of independent loops based on branches (l), nodes (n), and sub-networks (s)."
-        },
-        {
-            q: "According to the principle of voltage division, if two resistors (R1, R2) are in series, the voltage U1 across R1 is:",
-            opts: [{t: "U1 = U * R2 / (R1 + R2)", c: false}, {t: "U1 = U * R1 / (R1 + R2)", c: true}, {t: "U1 = U * (R1 + R2)", c: false}, {t: "U1 = U / R1", c: false}],
-            exp: "Voltage division for a series circuit states that the voltage drop across a specific resistor is proportional to its resistance relative to the total resistance."
-        },
-        {
-            q: "According to the principle of current division, if two resistors (R1, R2) are in parallel, the current I1 through R1 is:",
-            opts: [{t: "I1 = I * R1 / (R1 + R2)", c: false}, {t: "I1 = I * (R1 + R2)", c: false}, {t: "I1 = I * R2 / (R1 + R2)", c: true}, {t: "I1 = I / R1", c: false}],
-            exp: "Current division for a parallel circuit states that the current through a branch is proportional to the resistance of the other branch over the total resistance."
-        },
-        {
-            q: "What principle is the First Kirchhoff Theorem (KCL) based on?",
-            opts: [{t: "Conservation of Energy", c: false}, {t: "Conservation of Mass", c: false}, {t: "Conservation of Electric Charge", c: true}, {t: "Faraday's Law of Induction", c: false}],
-            exp: "KCL (The sum of currents leaving a node is zero) is based on the Law of Electric Charge Conservation."
-        },
-        {
-            q: "What principle is the Second Kirchhoff Theorem (KVL) based on?",
-            opts: [{t: "Conservation of Energy", c: true}, {t: "Conservation of Electric Charge", c: false}, {t: "Ohm's Law", c: false}, {t: "Ampere's Law", c: false}],
-            exp: "KVL (The algebraic sum of all voltages around a closed loop is zero) is based on the principle of conservation of energy."
-        },
-        {
-            q: "When applying Kirchhoff's Voltage Law (KVL) to a loop:",
-            opts: [{t: "The algebraic sum of currents is zero", c: false}, {t: "The sum of electromotive voltages equals the sum of voltage drops on resistors", c: true}, {t: "All voltage sources must be short-circuited", c: false}, {t: "The resistance of the loop must be zero", c: false}],
-            exp: "KVL mathematically states that in a closed loop, the algebraic sum of electromotive voltages (E) equals the sum of voltage drops (R*I)."
-        },
-        {
-            q: "How does an inductor respond to sudden changes in current?",
-            opts: [{t: "It amplifies the change", c: false}, {t: "It immediately drops to zero", c: false}, {t: "It opposes quick current variations", c: true}, {t: "It acts as a perfect conductor", c: false}],
-            exp: "A key property of an inductor is that it opposes quick variations in current; the current through an inductor cannot change instantaneously."
-        },
-        {
-            q: "How does a capacitor respond to sudden changes in voltage?",
-            opts: [{t: "It opposes the change, meaning voltage on a capacitor cannot change abruptly", c: true}, {t: "It amplifies the voltage instantly", c: false}, {t: "It turns into an open circuit permanently", c: false}, {t: "It instantly discharges all stored energy", c: false}],
-            exp: "The voltage across a capacitor cannot change abruptly (jump)."
-        },
-        {
-            q: "A passive branch in an electric circuit is one that:",
-            opts: [{t: "Contains at least one voltage generator", c: false}, {t: "Contains no sources (generators)", c: true}, {t: "Produces active power", c: false}, {t: "Has an infinite resistance", c: false}],
-            exp: "A passive branch is specifically defined as a branch without any sources."
-        },
-        {
-            q: "To convert a Star (Wye) network to a Delta (Triangle) network, the equivalent resistance R_12 is calculated as:",
-            opts: [{t: "R_12 = (R1*R2) / R3", c: false}, {t: "R_12 = R1 + R2 + R3", c: false}, {t: "R_12 = (R1*R2 + R2*R3 + R3*R1) / R3", c: true}, {t: "R_12 = (R1+R2+R3) / (R1*R2)", c: false}],
-            exp: "In a Star-to-Delta transfiguration, the Delta side resistance is the sum of all cross products of the Star resistors divided by the opposite Star resistor."
-        },
-        {
-            q: "Which property characterizes a stationary magnetic field?",
-            opts: [{t: "It acts at a distance through forces and couples", c: true}, {t: "It is produced by stationary electric charges", c: false}, {t: "It has sources with a speed of zero", c: false}, {t: "It blocks DC currents", c: false}],
-            exp: "A magnetic field acts at a distance through forces and couples, and is generated by mobile electric charges (currents) or permanent magnets."
-        },
-        {
-            q: "In the context of electrotechnics, what is a 'Transitory Regime'?",
-            opts: [{t: "When quantities have pure sinusoidal variation", c: false}, {t: "When quantities are constant in time", c: false}, {t: "The transition from one operating regime to another", c: true}, {t: "When the circuit is purely resistive", c: false}],
-            exp: "The transitory (or transient) regime describes the process of transitioning from one stable variation regime to another."
-        },
-        {
-            q: "What does the First Maxwell Equation (derived from the Magnetic Circuit Law) describe?",
-            opts: [{t: "The electric flux through a closed surface", c: false}, {t: "The curl of the magnetic field intensity relates to current density and displacement current", c: true}, {t: "The resistance of a conductor", c: false}, {t: "The voltage division in a loop", c: false}],
-            exp: "The local form of the Magnetic Circuit Law (First Maxwell Equation) is rot H = J + dD/dt."
-        },
-        {
-            q: "For a linear, homogeneous dielectric medium, what is the relationship between electric field E and electric induction D?",
-            opts: [{t: "D = E / epsilon", c: false}, {t: "E = D * epsilon", c: false}, {t: "D = epsilon * E", c: true}, {t: "D and E are not related", c: false}],
-            exp: "The electric induction D is the product of the dielectric permittivity (epsilon) and the electric field intensity E."
-        },
-        {
-            q: "The power at a resistor's terminals is:",
-            opts: [{t: "Always zero", c: false}, {t: "Always received (positive, P > 0)", c: true}, {t: "Always ceded (negative, P < 0)", c: false}, {t: "Dependent on the current direction being negative", c: false}],
-            exp: "An ideal resistor is a purely passive element; it only dissipates energy, meaning the power it absorbs is always positive (P = R * I^2 > 0)."
-        }
+        // --- 30 GENERATED QUESTIONS (FROM COURSE NOTES) ---
+        { source: 'generated', q: "According to Course 1, Electrotechnics covers two main parts. One is the Theory of Electric Circuits. What is the other?", opts: [{t: "The Theory of Thermodynamics", c: false}, {t: "The Theory of Electromagnetic Field", c: true}, {t: "The Theory of Solid State Physics", c: false}, {t: "The Theory of Digital Electronics", c: false}], exp: "Electrotechnics analyzes electric, magnetic and electromagnetic phenomena and covers two main parts: The Theory of Electromagnetic Field and The Theory of Electric Circuits." },
+        { source: 'generated', q: "How can the state of electrification (charging a body) be achieved?", opts: [{t: "Only by friction", c: false}, {t: "Only by heating", c: false}, {t: "By friction, heating, chemical effects, crystal deformation, or irradiation", c: true}, {t: "By changing the atmospheric pressure", c: false}], exp: "Electrification can be achieved by friction, heating, chemical effects, crystal deformation, or irradiation (e.g., x-rays or ultraviolet)." },
+        { source: 'generated', q: "What defines an insulator (dielectric) material?", opts: [{t: "It amplifies the flow of electric charges", c: false}, {t: "It allows the free flow of electric charges", c: false}, {t: "It reverses the direction of electric charges", c: false}, {t: "It doesn't allow the flow of electric charges", c: true}], exp: "An insulator doesn't allow the flow of electric charges. They are also called dielectrics." },
+        { source: 'generated', q: "The electric field intensity (E) is measured in which units?", opts: [{t: "Farads (F)", c: false}, {t: "Newtons per Coulomb (N/C) or Volts per meter (V/m)", c: true}, {t: "Coulombs (C)", c: false}, {t: "Joules (J)", c: false}], exp: "Electric field intensity is measured in Volts per meter (V/m) or Newtons per Coulomb (N/C)." },
+        { source: 'generated', q: "For a parallel plane capacitor, if 'A' is the area and 'd' is the distance between plates, the capacitance is:", opts: [{t: "C = (epsilon * d) / A", c: false}, {t: "C = (epsilon * A) / d", c: true}, {t: "C = epsilon * A * d", c: false}, {t: "C = A / (epsilon * d)", c: false}], exp: "The direct method calculation shows the capacitance of a plane capacitor is C = (epsilon * A) / d." },
+        { source: 'generated', q: "When capacitors are connected in parallel, the total equivalent capacitance is:", opts: [{t: "The sum of their reciprocals", c: false}, {t: "The product of their capacitances", c: false}, {t: "The sum of their individual capacitances", c: true}, {t: "Calculated exactly like resistors in parallel", c: false}], exp: "For capacitors in parallel, the equivalent capacitance is C_e = C_1 + C_2 + ... + C_n." },
+        { source: 'generated', q: "What is the relation between Electric Resistance (R) and Electric Conductance (G)?", opts: [{t: "G is the real part of R", c: false}, {t: "G is the reciprocal (inverse) of R", c: true}, {t: "G and R are measured in the same units", c: false}, {t: "G is the derivative of R with respect to time", c: false}], exp: "The reciprocal quantity of electric resistance is electric conductance (G = 1/R)." },
+        { source: 'generated', q: "Based on the temporary magnetization law, materials with magnetic susceptibility (X_m) < 0 are called:", opts: [{t: "Paramagnetic materials", c: false}, {t: "Ferromagnetic materials", c: false}, {t: "Diamagnetic materials", c: true}, {t: "Linear materials", c: false}], exp: "Materials for which X_m < 0 are called diamagnetic materials." },
+        { source: 'generated', q: "What defines a paramagnetic material?", opts: [{t: "X_m < 0", c: false}, {t: "X_m = 0", c: false}, {t: "X_m > 0", c: true}, {t: "It depends on the electric field", c: false}], exp: "Materials for which magnetic susceptibility X_m > 0 are called paramagnetic materials." },
+        { source: 'generated', q: "Which passive electronic circuit component is used specifically to store magnetic energy?", opts: [{t: "Resistor", c: false}, {t: "Capacitor", c: false}, {t: "Inductor (Coil)", c: true}, {t: "Diode", c: false}], exp: "An inductor (coil) is a passive electric element used in circuits to store magnetic energy." },
+        { source: 'generated', q: "According to Faraday's experiment, what happens if you move a permanent magnet inside a conductive loop?", opts: [{t: "It acts as a capacitor", c: false}, {t: "An electric current is induced", c: true}, {t: "The loop becomes perfectly resistive", c: false}, {t: "The magnetic field is destroyed", c: false}], exp: "Moving a permanent magnet inside a conductive loop changes the magnetic flux, inducing an electromotive voltage and an electric current." },
+        { source: 'generated', q: "Electromotive voltage induced by Faraday's Law can be decomposed into two components:", opts: [{t: "Friction and Heating", c: false}, {t: "Movement and Transformation", c: true}, {t: "Active and Passive", c: false}, {t: "Electric and Magnetic", c: false}], exp: "The total induced electromotive voltage is the sum of the voltage induced through movement and the voltage induced through transformation." },
+        { source: 'generated', q: "An active element of a circuit is defined as:", opts: [{t: "An element that dissipates energy as heat", c: false}, {t: "An element capable of generating energy", c: true}, {t: "An element that only stores magnetic energy", c: false}, {t: "An element that only opposes current", c: false}], exp: "An active element (like a voltage or current source) is capable of generating energy, while a passive element is not." },
+        { source: 'generated', q: "In circuit topology, what is a 'node'?", opts: [{t: "An unbranched portion of a circuit", c: false}, {t: "Any closed path in a circuit", c: false}, {t: "An element that stores energy", c: false}, {t: "The point of connection between at least three branches", c: true}], exp: "A node is the point of connection between at least three branches." },
+        { source: 'generated', q: "In circuit topology, a 'branch' is defined as:", opts: [{t: "A point where three wires meet", c: false}, {t: "Any closed path in a circuit", c: false}, {t: "An unbranched portion of a circuit formed of elements connected in series", c: true}, {t: "A network of parallel resistors", c: false}], exp: "A branch of a circuit is an unbranched portion of a circuit formed of elements connected in series with each other." },
+        { source: 'generated', q: "What does Euler's Theorem calculate in circuit topology?", opts: [{t: "The total resistance", c: false}, {t: "The equivalent capacitance", c: false}, {t: "The number of independent loops (b = l - n + s)", c: true}, {t: "The total electromotive force", c: false}], exp: "Euler's Theorem (b = l - n + s) determines the exact number of independent loops based on branches (l), nodes (n), and sub-networks (s)." },
+        { source: 'generated', q: "According to the principle of voltage division, if two resistors (R1, R2) are in series, the voltage U1 across R1 is:", opts: [{t: "U1 = U * R2 / (R1 + R2)", c: false}, {t: "U1 = U * R1 / (R1 + R2)", c: true}, {t: "U1 = U * (R1 + R2)", c: false}, {t: "U1 = U / R1", c: false}], exp: "Voltage division for a series circuit states that the voltage drop across a specific resistor is proportional to its resistance relative to the total resistance." },
+        { source: 'generated', q: "According to the principle of current division, if two resistors (R1, R2) are in parallel, the current I1 through R1 is:", opts: [{t: "I1 = I * R1 / (R1 + R2)", c: false}, {t: "I1 = I * (R1 + R2)", c: false}, {t: "I1 = I * R2 / (R1 + R2)", c: true}, {t: "I1 = I / R1", c: false}], exp: "Current division for a parallel circuit states that the current through a branch is proportional to the resistance of the other branch over the total resistance." },
+        { source: 'generated', q: "What principle is the First Kirchhoff Theorem (KCL) based on?", opts: [{t: "Conservation of Energy", c: false}, {t: "Conservation of Mass", c: false}, {t: "Conservation of Electric Charge", c: true}, {t: "Faraday's Law of Induction", c: false}], exp: "KCL (The sum of currents leaving a node is zero) is based on the Law of Electric Charge Conservation." },
+        { source: 'generated', q: "What principle is the Second Kirchhoff Theorem (KVL) based on?", opts: [{t: "Conservation of Energy", c: true}, {t: "Conservation of Electric Charge", c: false}, {t: "Ohm's Law", c: false}, {t: "Ampere's Law", c: false}], exp: "KVL (The algebraic sum of all voltages around a closed loop is zero) is based on the principle of conservation of energy." },
+        { source: 'generated', q: "When applying Kirchhoff's Voltage Law (KVL) to a loop:", opts: [{t: "The algebraic sum of currents is zero", c: false}, {t: "The sum of electromotive voltages equals the sum of voltage drops on resistors", c: true}, {t: "All voltage sources must be short-circuited", c: false}, {t: "The resistance of the loop must be zero", c: false}], exp: "KVL mathematically states that in a closed loop, the algebraic sum of electromotive voltages (E) equals the sum of voltage drops (R*I)." },
+        { source: 'generated', q: "How does an inductor respond to sudden changes in current?", opts: [{t: "It amplifies the change", c: false}, {t: "It immediately drops to zero", c: false}, {t: "It opposes quick current variations", c: true}, {t: "It acts as a perfect conductor", c: false}], exp: "A key property of an inductor is that it opposes quick variations in current; the current through an inductor cannot change instantaneously." },
+        { source: 'generated', q: "How does a capacitor respond to sudden changes in voltage?", opts: [{t: "It opposes the change, meaning voltage on a capacitor cannot change abruptly", c: true}, {t: "It amplifies the voltage instantly", c: false}, {t: "It turns into an open circuit permanently", c: false}, {t: "It instantly discharges all stored energy", c: false}], exp: "The voltage across a capacitor cannot change abruptly (jump)." },
+        { source: 'generated', q: "A passive branch in an electric circuit is one that:", opts: [{t: "Contains at least one voltage generator", c: false}, {t: "Contains no sources (generators)", c: true}, {t: "Produces active power", c: false}, {t: "Has an infinite resistance", c: false}], exp: "A passive branch is specifically defined as a branch without any sources." },
+        { source: 'generated', q: "To convert a Star (Wye) network to a Delta (Triangle) network, the equivalent resistance R_12 is calculated as:", opts: [{t: "R_12 = (R1*R2) / R3", c: false}, {t: "R_12 = R1 + R2 + R3", c: false}, {t: "R_12 = (R1*R2 + R2*R3 + R3*R1) / R3", c: true}, {t: "R_12 = (R1+R2+R3) / (R1*R2)", c: false}], exp: "In a Star-to-Delta transfiguration, the Delta side resistance is the sum of all cross products of the Star resistors divided by the opposite Star resistor." },
+        { source: 'generated', q: "Which property characterizes a stationary magnetic field?", opts: [{t: "It acts at a distance through forces and couples", c: true}, {t: "It is produced by stationary electric charges", c: false}, {t: "It has sources with a speed of zero", c: false}, {t: "It blocks DC currents", c: false}], exp: "A magnetic field acts at a distance through forces and couples, and is generated by mobile electric charges (currents) or permanent magnets." },
+        { source: 'generated', q: "In the context of electrotechnics, what is a 'Transitory Regime'?", opts: [{t: "When quantities have pure sinusoidal variation", c: false}, {t: "When quantities are constant in time", c: false}, {t: "The transition from one operating regime to another", c: true}, {t: "When the circuit is purely resistive", c: false}], exp: "The transitory (or transient) regime describes the process of transitioning from one stable variation regime to another." },
+        { source: 'generated', q: "What does the First Maxwell Equation (derived from the Magnetic Circuit Law) describe?", opts: [{t: "The electric flux through a closed surface", c: false}, {t: "The curl of the magnetic field intensity relates to current density and displacement current", c: true}, {t: "The resistance of a conductor", c: false}, {t: "The voltage division in a loop", c: false}], exp: "The local form of the Magnetic Circuit Law (First Maxwell Equation) is rot H = J + dD/dt." },
+        { source: 'generated', q: "For a linear, homogeneous dielectric medium, what is the relationship between electric field E and electric induction D?", opts: [{t: "D = E / epsilon", c: false}, {t: "E = D * epsilon", c: false}, {t: "D = epsilon * E", c: true}, {t: "D and E are not related", c: false}], exp: "The electric induction D is the product of the dielectric permittivity (epsilon) and the electric field intensity E." },
+        { source: 'generated', q: "The power at a resistor's terminals is:", opts: [{t: "Always zero", c: false}, {t: "Always received (positive, P > 0)", c: true}, {t: "Always ceded (negative, P < 0)", c: false}, {t: "Dependent on the current direction being negative", c: false}], exp: "An ideal resistor is a purely passive element; it only dissipates energy, meaning the power it absorbs is always positive (P = R * I^2 > 0)." }
     ];
 
-    let currentQuestions = [];
-    let currentQuestionIndex = 0;
+    let questions = [];
+    let currentIdx = 0;
     let score = 0;
     let answered = false;
+    let userHistory = [];
 
+    // Utility to switch screens
+    function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // Array Shuffler
     function shuffleArray(array) {
-        let currentIndex = array.length, randomIndex;
-        while (currentIndex !== 0) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex--;
-            [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+        let curId = array.length;
+        while (0 !== curId) {
+            let randId = Math.floor(Math.random() * curId);
+            curId -= 1;
+            let tmp = array[curId];
+            array[curId] = array[randId];
+            array[randId] = tmp;
         }
         return array;
     }
 
-    function startQuiz() {
-        currentQuestions = shuffleArray([...rawQuestions]);
-        currentQuestionIndex = 0;
+    function startExam() {
+        questions = shuffleArray([...rawQuestions]);
+        currentIdx = 0;
         score = 0;
-        document.getElementById('result-container').style.display = 'none';
-        document.getElementById('quiz-container').style.display = 'block';
-        updateStats();
+        userHistory = [];
+        showScreen('screen-exam');
         loadQuestion();
     }
 
     function loadQuestion() {
         answered = false;
-        document.getElementById('next-btn').style.display = 'none';
-        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('btn-skip').style.display = 'block';
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('explanation-box').style.display = 'none';
+
+        const q = questions[currentIdx];
         
-        const qObj = currentQuestions[currentQuestionIndex];
-        document.getElementById('question').innerText = qObj.q;
+        // Update Stats
+        document.getElementById('progress-text').innerText = `Question ${currentIdx + 1} of ${questions.length}`;
+        document.getElementById('score-text').innerText = `Score: ${score}`;
 
-        const shuffledOpts = shuffleArray([...qObj.opts]);
-        const optionsContainer = document.getElementById('options');
-        optionsContainer.innerHTML = '';
+        // Update Source Badge
+        const badge = document.getElementById('source-indicator');
+        if (q.source === 'original') {
+            badge.innerHTML = `<span class="source-badge original">📁 Source: Original File</span>`;
+        } else {
+            badge.innerHTML = `<span class="source-badge generated">📝 Source: Generated (Course Notes)</span>`;
+        }
 
-        shuffledOpts.forEach(opt => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = opt.t;
-            btn.onclick = () => checkAnswer(opt, btn, shuffledOpts);
-            optionsContainer.appendChild(btn);
+        // Render Question
+        document.getElementById('question-text').innerText = q.q;
+
+        // Render Options
+        if (!q.shuffledOpts) q.shuffledOpts = shuffleArray([...q.opts]);
+        
+        const optionsList = document.getElementById('options-list');
+        optionsList.innerHTML = '';
+        
+        const letters = ['A', 'B', 'C', 'D'];
+
+        q.shuffledOpts.forEach((opt, idx) => {
+            const optEl = document.createElement('div');
+            optEl.className = 'option-item';
+            optEl.innerHTML = `
+                <div class="opt-letter">${letters[idx]}</div>
+                <div>${opt.t}</div>
+            `;
+            optEl.onclick = () => selectOption(idx, optEl);
+            optionsList.appendChild(optEl);
         });
-
-        updateStats();
     }
 
-    function checkAnswer(selectedOpt, selectedBtn, allOptsData) {
+    function selectOption(optIdx, selectedEl) {
         if (answered) return;
         answered = true;
 
-        const allBtns = document.querySelectorAll('.option-btn');
-        const qObj = currentQuestions[currentQuestionIndex];
+        const q = questions[currentIdx];
+        const selectedOpt = q.shuffledOpts[optIdx];
+        const allOptionElements = document.querySelectorAll('.option-item');
+        
+        // Find correct text for history
+        const correctText = q.opts.find(o => o.c).t;
 
-        allBtns.forEach((btn, index) => {
-            btn.disabled = true;
-            const optData = allOptsData[index];
+        // Reveal answers visually
+        allOptionElements.forEach((el, index) => {
+            el.classList.add('disabled');
+            const optData = q.shuffledOpts[index];
+            
             if (optData.c) {
-                btn.classList.add('correct');
-            } else if (btn === selectedBtn && !optData.c) {
-                btn.classList.add('wrong');
+                el.classList.add('correct');
+            } else if (el === selectedEl && !optData.c) {
+                el.classList.add('wrong');
+            } else {
+                el.classList.add('faded');
             }
         });
 
-        const explanationDiv = document.getElementById('explanation');
+        const expBox = document.getElementById('explanation-box');
         
         if (selectedOpt.c) {
             score++;
-            explanationDiv.innerHTML = "<strong>Corect!</strong> " + qObj.exp;
-            explanationDiv.style.borderLeftColor = "#10b981";
+            expBox.innerHTML = `<span class="status-title" style="color:var(--correct);">✅ Correct!</span><p>${q.exp}</p>`;
+            expBox.style.borderLeftColor = 'var(--correct)';
+            userHistory.push({ q: q.q, status: 'correct', userA: selectedOpt.t, correctA: correctText, exp: q.exp });
         } else {
-            explanationDiv.innerHTML = "<strong>Incorect.</strong> " + qObj.exp;
-            explanationDiv.style.borderLeftColor = "#ef4444";
+            expBox.innerHTML = `<span class="status-title" style="color:var(--wrong);">❌ Incorrect.</span><p>${q.exp}</p>`;
+            expBox.style.borderLeftColor = 'var(--wrong)';
+            userHistory.push({ q: q.q, status: 'wrong', userA: selectedOpt.t, correctA: correctText, exp: q.exp });
         }
         
-        explanationDiv.style.display = 'block';
-        document.getElementById('next-btn').style.display = 'block';
-        updateStats();
+        expBox.style.display = 'block';
+        document.getElementById('btn-skip').style.display = 'none';
+        
+        const btnNext = document.getElementById('btn-next');
+        btnNext.style.display = 'block';
+        btnNext.innerText = (currentIdx === questions.length - 1) ? 'Finish Exam' : 'Next Question';
+        
+        // Update score display immediately
+        document.getElementById('score-text').innerText = `Score: ${score}`;
+    }
+
+    function skipQuestion() {
+        if (answered) return;
+        answered = true;
+
+        const q = questions[currentIdx];
+        const allOptionElements = document.querySelectorAll('.option-item');
+        const correctText = q.opts.find(o => o.c).t;
+
+        allOptionElements.forEach((el, index) => {
+            el.classList.add('disabled');
+            if (q.shuffledOpts[index].c) {
+                el.classList.add('correct');
+            } else {
+                el.classList.add('faded');
+            }
+        });
+
+        const expBox = document.getElementById('explanation-box');
+        expBox.innerHTML = `<span class="status-title" style="color:var(--skipped);">⚠️ Skipped.</span><p><strong>Correct Answer:</strong> ${q.exp}</p>`;
+        expBox.style.borderLeftColor = 'var(--skipped)';
+        expBox.style.display = 'block';
+
+        userHistory.push({ q: q.q, status: 'skipped', userA: '(Skipped)', correctA: correctText, exp: q.exp });
+
+        document.getElementById('btn-skip').style.display = 'none';
+        const btnNext = document.getElementById('btn-next');
+        btnNext.style.display = 'block';
+        btnNext.innerText = (currentIdx === questions.length - 1) ? 'Finish Exam' : 'Next Question';
     }
 
     function nextQuestion() {
-        currentQuestionIndex++;
-        if (currentQuestionIndex < currentQuestions.length) {
+        if (currentIdx < questions.length - 1) {
+            currentIdx++;
             loadQuestion();
         } else {
-            showResults();
+            buildSummary();
+            showScreen('screen-results');
         }
     }
 
-    function updateStats() {
-        const progressStr = `Întrebarea: ${Math.min(currentQuestionIndex + 1, currentQuestions.length)}/${currentQuestions.length}`;
-        document.getElementById('progress').innerText = progressStr;
-        document.getElementById('score-display').innerText = `Scor: ${score}`;
-    }
+    function buildSummary() {
+        const percent = Math.round((score / questions.length) * 100);
+        document.getElementById('final-score').innerText = `${score} / ${questions.length} (${percent}%)`;
 
-    function showResults() {
-        document.getElementById('quiz-container').style.display = 'none';
-        document.getElementById('result-container').style.display = 'block';
-        
-        const percentage = Math.round((score / currentQuestions.length) * 100);
-        document.getElementById('final-score').innerText = `Ai obținut ${score} puncte din ${currentQuestions.length} (${percentage}%)`;
-    }
+        const sumList = document.getElementById('summary-list');
+        sumList.innerHTML = '';
 
-    window.onload = startQuiz;
+        userHistory.forEach((item, idx) => {
+            let color = '';
+            let icon = '';
+            if (item.status === 'correct') { color = 'var(--correct)'; icon = '✅'; }
+            else if (item.status === 'wrong') { color = 'var(--wrong)'; icon = '❌'; }
+            else { color = 'var(--skipped)'; icon = '⚠️'; }
+
+            let html = `
+                <div class="sum-item ${item.status}">
+                    <div class="sum-q">${idx + 1}. ${item.q}</div>
+                    <div class="sum-a" style="color: ${color};"><strong>${icon} Your Answer:</strong> ${item.userA}</div>
+            `;
+            if (item.status !== 'correct') {
+                html += `<div class="sum-a" style="color: var(--correct); margin-top: 5px;"><strong>✓ Correct Answer:</strong> ${item.correctA}</div>`;
+            }
+            html += `</div>`;
+            sumList.innerHTML += html;
+        });
+    }
 </script>
 </body>
 </html>
